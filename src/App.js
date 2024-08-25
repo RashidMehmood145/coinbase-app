@@ -1,7 +1,6 @@
-// App.js
-import React, { useState, useEffect, useRef } from "react";
-import "./styles.css";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import CurrencyWidget from "./components/CurrencyWidget";
+import "./styles.css";
 
 const url = process.env.REACT_APP_API_URL || "https://api.pro.coinbase.com";
 const WS_URL =
@@ -12,42 +11,25 @@ function App() {
   const [currencyPairs, setCurrencyPairs] = useState([]);
   const wsRef = useRef(null);
 
-  useEffect(() => {
-    const fetchCurrencies = async () => {
-      try {
-        const response = await fetch(`${url}/products`);
-        const data = await response.json();
-        const filtered = data
-          .filter((pair) => pair.quote_currency === "USD")
-          .map((pair) => pair.id)
-          .sort((a, b) => a.localeCompare(b));
-        setCurrencyPairs(filtered);
-      } catch (error) {
-        console.error("Error fetching product pairs:", error);
-      }
-    };
+  const fetchCurrencies = useCallback(async () => {
+    try {
+      const response = await fetch(`${url}/products`);
+      const data = await response.json();
+      const filtered = data
+        .filter((pair) => pair.quote_currency === "USD")
+        .map((pair) => pair.id)
+        .sort((a, b) => a.localeCompare(b));
+      setCurrencyPairs(filtered);
+    } catch (error) {
+      console.error("Error fetching product pairs:", error);
+    }
+  }, []);
 
+  useEffect(() => {
     fetchCurrencies();
-  }, []);
+  }, [fetchCurrencies]);
 
-  useEffect(() => {
-    wsRef.current = new WebSocket(WS_URL);
-
-    wsRef.current.onopen = () => {
-      console.log("WebSocket connected");
-      subscribeToChannel();
-    };
-
-    return () => {
-      if (wsRef.current) wsRef.current.close();
-    };
-  }, []);
-
-  useEffect(() => {
-    subscribeToChannel();
-  }, [selectedPair]);
-
-  const subscribeToChannel = () => {
+  const subscribeToChannel = useCallback(() => {
     if (
       wsRef.current &&
       wsRef.current.readyState === WebSocket.OPEN &&
@@ -60,7 +42,24 @@ function App() {
       };
       wsRef.current.send(JSON.stringify(subscribeMsg));
     }
-  };
+  }, [selectedPair]);
+
+  useEffect(() => {
+    wsRef.current = new WebSocket(WS_URL);
+
+    wsRef.current.onopen = () => {
+      console.log("WebSocket connected");
+      subscribeToChannel();
+    };
+
+    return () => {
+      if (wsRef.current) wsRef.current.close();
+    };
+  }, [subscribeToChannel]);
+
+  useEffect(() => {
+    subscribeToChannel();
+  }, [subscribeToChannel]);
 
   const handlePairSelection = (event) => {
     setSelectedPair(event.target.value);

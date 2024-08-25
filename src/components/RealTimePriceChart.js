@@ -1,5 +1,4 @@
-// components/RealTimePriceChart.js
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { createChart } from 'lightweight-charts';
 
 function RealTimePriceChart({ pair, data }) {
@@ -7,6 +6,40 @@ function RealTimePriceChart({ pair, data }) {
   const chartContainerRef = useRef();
   const chartRef = useRef();
   const seriesRef = useRef();
+
+  const fetchHistoricalData = useCallback(async () => {
+    try {
+      const endDate = new Date();
+      const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
+
+      const response = await fetch(
+        `${url}/products/${pair}/candles?start=${startDate.toISOString()}&end=${endDate.toISOString()}&granularity=3600`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch historical data');
+      }
+
+      const historicalData = await response.json();
+
+      // Format the data for the chart
+      const formattedData = historicalData.map(candle => ({
+        time: candle[0], // Unix timestamp
+        value: candle[4], // Closing price
+      }));
+
+      // Sort the data by time in ascending order
+      formattedData.sort((a, b) => a.time - b.time);
+
+      // Set the historical data on the chart
+      if (seriesRef.current) {
+        seriesRef.current.setData(formattedData);
+      }
+
+    } catch (error) {
+      console.error('Error fetching historical data:', error);
+    }
+  }, [url, pair]);
 
   useEffect(() => {
     if (!chartRef.current) {
@@ -46,7 +79,7 @@ function RealTimePriceChart({ pair, data }) {
         chartRef.current = null;
       }
     };
-  }, [pair]);
+  }, [fetchHistoricalData]);
 
   useEffect(() => {
     if (data && data.time && data.price && seriesRef.current) {
@@ -56,38 +89,6 @@ function RealTimePriceChart({ pair, data }) {
       });
     }
   }, [data]);
-
-  const fetchHistoricalData = async () => {
-    try {
-      const endDate = new Date();
-      const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
-
-      const response = await fetch(
-        `${url}/products/${pair}/candles?start=${startDate.toISOString()}&end=${endDate.toISOString()}&granularity=3600`
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch historical data');
-      }
-
-      const historicalData = await response.json();
-
-      // Format the data for the chart
-      const formattedData = historicalData.map(candle => ({
-        time: candle[0], // Unix timestamp
-        value: candle[4], // Closing price
-      }));
-
-      // Sort the data by time in ascending order
-      formattedData.sort((a, b) => a.time - b.time);
-
-      // Set the historical data on the chart
-      seriesRef.current.setData(formattedData);
-
-    } catch (error) {
-      console.error('Error fetching historical data:', error);
-    }
-  };
 
   return <div className="chart" ref={chartContainerRef} />;
 }
