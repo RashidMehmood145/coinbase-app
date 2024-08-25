@@ -2,31 +2,24 @@
   margin: 40px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   height: 100vh;
-
 }
 
-/* .chart-container {
-  width: 80%;
-  height: 100%;
-} */
-a#tv-attr-logo{
+a#tv-attr-logo {
   display: none;
 }
 
-.mainHeader{
+.mainHeader {
   text-align: center;
 }
 
-.top-of-book{
+.top-of-book {
   text-align: center;
 }
-.bitContainer{
+.bitContainer {
   display: flex;
-    gap: 10px;
-    justify-content: center;
+  gap: 10px;
+  justify-content: center;
 }
-
-
 
 .real-time-chart {
   border: 1px solid #ccc;
@@ -39,14 +32,14 @@ a#tv-attr-logo{
   justify-content: space-between;
   margin-bottom: 20px;
 }
-.currencyPair{
+.currencyPair {
   text-align: center;
 }
 
-.order-book{
+.order-book {
   margin: 40px;
 }
-.mainHeader select{
+.mainHeader select {
   width: 300px;
   padding: 10px;
 }
@@ -57,7 +50,7 @@ a#tv-attr-logo{
   border-radius: 5px;
   width: 300px;
 }
-.best-ask{
+.best-ask {
   background-color: rgba(243, 177, 10, 0.5);
   padding: 10px;
   border-radius: 5px;
@@ -65,11 +58,11 @@ a#tv-attr-logo{
 }
 
 .best-bid h3 {
-  color: #4285F4;
+  color: #4285f4;
 }
 
 .best-ask h3 {
-  color: #EA4335;
+  color: #ea4335;
 }
 
 .chart {
