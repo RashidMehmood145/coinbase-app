@@ -9,7 +9,9 @@ const WS_URL =
 function App() {
   const [selectedPair, setSelectedPair] = useState("");
   const [currencyPairs, setCurrencyPairs] = useState([]);
+  const [socketData, setSocketData] = useState(null);
   const wsRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
 
   const fetchCurrencies = useCallback(async () => {
     try {
@@ -41,10 +43,15 @@ function App() {
         channels: ["ticker", "level2_batch"],
       };
       wsRef.current.send(JSON.stringify(subscribeMsg));
+      console.log("Subscribed to:", selectedPair);
     }
   }, [selectedPair]);
 
-  useEffect(() => {
+  const connectWebSocket = useCallback(() => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      return; // Already connected
+    }
+
     wsRef.current = new WebSocket(WS_URL);
 
     wsRef.current.onopen = () => {
@@ -52,14 +59,39 @@ function App() {
       subscribeToChannel();
     };
 
-    return () => {
-      if (wsRef.current) wsRef.current.close();
+    wsRef.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log("Received data:", data);
+      setSocketData(data);
+    };
+
+    wsRef.current.onclose = (event) => {
+      console.log("WebSocket closed. Attempting to reconnect...", event.code, event.reason);
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = setTimeout(connectWebSocket, 5000);
+    };
+
+    wsRef.current.onerror = (error) => {
+      console.error("WebSocket error:", error);
     };
   }, [subscribeToChannel]);
 
   useEffect(() => {
-    subscribeToChannel();
-  }, [subscribeToChannel]);
+    connectWebSocket();
+
+    return () => {
+      clearTimeout(reconnectTimeoutRef.current);
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [connectWebSocket]);
+
+  useEffect(() => {
+    if (selectedPair) {
+      subscribeToChannel();
+    }
+  }, [selectedPair, subscribeToChannel]);
 
   const handlePairSelection = (event) => {
     setSelectedPair(event.target.value);
@@ -84,7 +116,7 @@ function App() {
           <CurrencyWidget
             key={selectedPair}
             pair={selectedPair}
-            ws={wsRef.current}
+            socketData={socketData}
           />
         )}
       </div>

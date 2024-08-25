@@ -1,44 +1,32 @@
-// components/CurrencyWidget.js
 import React, { useState, useEffect } from "react";
 import TopOfBook from "./TopOfBook";
 import RealTimePriceChart from "./RealTimePriceChart";
 import OrderBook from "./OrderBook";
 
-function CurrencyWidget({ pair, ws }) {
+function CurrencyWidget({ pair, socketData }) {
   const [tickerData, setTickerData] = useState(null);
   const [orderBookData, setOrderBookData] = useState({ bids: [], asks: [] });
 
   useEffect(() => {
-    if (!ws) return;
-
-    const messageHandler = (event) => {
-      const message = JSON.parse(event.data);
-      if (message.product_id === pair) {
-        if (message.type === "ticker") {
-          setTickerData(message);
-        } else if (message.type === "snapshot") {
-          setOrderBookData({
-            bids: message.bids.map(([price, size]) => ({
-              price: parseFloat(price),
-              quantity: parseFloat(size),
-            })),
-            asks: message.asks.map(([price, size]) => ({
-              price: parseFloat(price),
-              quantity: parseFloat(size),
-            })),
-          });
-        } else if (message.type === "l2update") {
-          updateOrderBook(message);
-        }
+    if (socketData && socketData.product_id === pair) {
+      if (socketData.type === "ticker") {
+        setTickerData(socketData);
+      } else if (socketData.type === "snapshot") {
+        setOrderBookData({
+          bids: socketData.bids.map(([price, size]) => ({
+            price: parseFloat(price),
+            quantity: parseFloat(size),
+          })),
+          asks: socketData.asks.map(([price, size]) => ({
+            price: parseFloat(price),
+            quantity: parseFloat(size),
+          })),
+        });
+      } else if (socketData.type === "l2update") {
+        updateOrderBook(socketData);
       }
-    };
-
-    ws.addEventListener("message", messageHandler);
-
-    return () => {
-      ws.removeEventListener("message", messageHandler);
-    };
-  }, [pair, ws]);
+    }
+  }, [socketData, pair]);
 
   const updateOrderBook = (update) => {
     setOrderBookData((prevData) => {
