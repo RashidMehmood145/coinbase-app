@@ -10,7 +10,7 @@ function RealTimePriceChart({ pair, data }) {
   const fetchHistoricalData = useCallback(async () => {
     try {
       const endDate = new Date();
-      const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
+      const startDate = new Date(endDate.getTime() - 2 * 24 * 60 * 60 * 1000); // 24 hours ago
 
       const response = await fetch(
         `${url}/products/${pair}/candles?start=${startDate.toISOString()}&end=${endDate.toISOString()}&granularity=3600`

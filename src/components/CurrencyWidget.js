@@ -57,7 +57,10 @@ function CurrencyWidget({ pair, socketData }) {
 
   return (
     <div className="currency-widget">
-      <h2>{pair}</h2>
+    <div className = "currencyPair"> 
+    <h4>Selected Currency Pair : {pair}</h4>
+    </div>
+      
       <TopOfBook data={tickerData} />
       <RealTimePriceChart pair={pair} data={tickerData} />
       <OrderBook data={orderBookData} />

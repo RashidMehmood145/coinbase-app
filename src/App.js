@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import CurrencyWidget from "./components/CurrencyWidget";
-import "./styles.css";
+import "./App.css";
 
 const url = process.env.REACT_APP_API_URL || "https://api.pro.coinbase.com";
 const WS_URL =
@@ -66,7 +66,11 @@ function App() {
     };
 
     wsRef.current.onclose = (event) => {
-      console.log("WebSocket closed. Attempting to reconnect...", event.code, event.reason);
+      console.log(
+        "WebSocket closed. Attempting to reconnect...",
+        event.code,
+        event.reason
+      );
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = setTimeout(connectWebSocket, 5000);
     };
@@ -99,9 +103,9 @@ function App() {
 
   return (
     <div className="container">
-      <h1>Cryptocurrency Data</h1>
-      <div>
-        <h2>Select Currency Pair:</h2>
+      <div className="mainHeader">
+        <h1>Cryptocurrency Data</h1>
+        <h2>Select Currency Pair</h2>
         <select value={selectedPair} onChange={handlePairSelection}>
           <option value="">Select a pair</option>
           {currencyPairs.map((pair) => (
@@ -111,6 +115,7 @@ function App() {
           ))}
         </select>
       </div>
+
       <div className="widgets-container">
         {selectedPair && (
           <CurrencyWidget
